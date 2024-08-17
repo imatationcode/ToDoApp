@@ -23,7 +23,7 @@ class ToDoViewController: UITableViewController {
         cell.textLabel?.text = taskListArray[indexPath.row]
         return cell
     }
-    
+    //MARK: table view delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
             tableView.cellForRow(at: indexPath)?.accessoryType = .none
