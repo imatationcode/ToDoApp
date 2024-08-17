@@ -13,7 +13,29 @@ class ToDoViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationController?.navigationBar.barTintColor = .red
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewTask))
+        addButton.tintColor = .black
+        navigationItem.rightBarButtonItem = addButton
     }
+    
+    @objc func addNewTask() {
+        var taskTitleTextField = UITextField()
+        let alert = UIAlertController(title: "New Task", message: "", preferredStyle: .alert)
+        let cancelAction = UIAlertAction(title: "Add This", style: .default) { addAction in
+            print(taskTitleTextField.text!)
+            self.taskListArray.append(taskTitleTextField.text!)
+            self.tableView.reloadData()
+        }
+        
+        
+        alert.addTextField { alertTextField in
+            alertTextField.placeholder = "Add Neew Task"
+            taskTitleTextField = alertTextField
+        }
+        alert.addAction(cancelAction)
+        self.present(alert, animated: true)
+    }
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return taskListArray.count
     }
