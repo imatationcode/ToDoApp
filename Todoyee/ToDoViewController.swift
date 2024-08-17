@@ -8,14 +8,15 @@
 import UIKit
 
 class ToDoViewController: UITableViewController {
-    var taskListArray = ["Shopping", "Study", "Travel" ]
-
+    var taskListArray:[String] = []
+    let defaultsVar = UserDefaults.standard
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationController?.navigationBar.barTintColor = .red
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewTask))
         addButton.tintColor = .black
         navigationItem.rightBarButtonItem = addButton
+        taskListArray = defaultsVar.array(forKey: "TaskList") as? [String] ?? ["New Task"]
     }
     
     @objc func addNewTask() {
@@ -25,6 +26,7 @@ class ToDoViewController: UITableViewController {
             print(taskTitleTextField.text!)
             self.taskListArray.append(taskTitleTextField.text!)
             self.tableView.reloadData()
+            self.defaultsVar.set(self.taskListArray, forKey: "TaskList")
         }
         
         
@@ -42,7 +44,8 @@ class ToDoViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "todoIdentifier", for: indexPath)
-        cell.textLabel?.text = taskListArray[indexPath.row]
+        let reversedIndex = taskListArray.count - 1 - indexPath.row
+        cell.textLabel?.text = taskListArray[reversedIndex]
         return cell
     }
     //MARK: table view delegate methods
