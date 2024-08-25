@@ -6,3 +6,7 @@
 //
 
 import Foundation
+struct TaskModalClass: Codable {
+    var taskName : String?
+    var isCompletedTask : Bool = false
+}
