@@ -5,12 +5,11 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoViewController: UITableViewController {
-    
-    var taskListArray = [TaskModalClass]()
-    var newTask : TaskModalClass!
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("ToDoDataFile.plist")
+    var taskListArray = [TaskList]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,19 +17,18 @@ class ToDoViewController: UITableViewController {
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewTask))
         addButton.tintColor = .black
         navigationItem.rightBarButtonItem = addButton
-        print(dataFilePath!)
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         loadTasks()
     }
     
     //MARK: to Load the Presistant data on device loadTasks
     func loadTasks() {
-        if let tasksData = try? Data(contentsOf: dataFilePath!) {
-            let myDecoer = PropertyListDecoder()
-            do {
-                self.taskListArray = try myDecoer.decode([TaskModalClass].self, from: tasksData)
-            } catch {
-                print("Error while decoding\(error)")
-            }
+        let requestVar: NSFetchRequest<TaskList> = TaskList.fetchRequest()
+        
+        do {
+            taskListArray = try context.fetch(requestVar)
+        } catch {
+            print("Error While Fetching data from core Data\n \(error)")
         }
     }
     
@@ -44,9 +42,10 @@ class ToDoViewController: UITableViewController {
         }
         
         let addTaskButton = UIAlertAction(title: "Add This", style: .default) { addAction in
-            self.newTask = TaskModalClass()
-            self.newTask?.taskName = taskTitleTextField.text!
-            self.taskListArray.append(self.newTask!)
+            let newTask = TaskList(context: self.context)
+            newTask.taskName = taskTitleTextField.text!
+            newTask.isCompletedTask = false
+            self.taskListArray.append(newTask)
             self.saveIteamsAndState()
         }
         alert.addAction(addTaskButton)
@@ -60,7 +59,6 @@ class ToDoViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "todoIdentifier", for: indexPath)
         let reversedIndex = taskListArray.count - 1 - indexPath.row
-        
         cell.textLabel?.text = taskListArray[reversedIndex].taskName
         
         cell.accessoryType = taskListArray[reversedIndex].isCompletedTask == true ? .checkmark : .none
@@ -72,19 +70,17 @@ class ToDoViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let reversedIndex = taskListArray.count - 1 - indexPath.row
         taskListArray[reversedIndex].isCompletedTask.toggle()
-        saveIteamsAndState()
         tableView.deselectRow(at: indexPath, animated: true)
+        saveIteamsAndState()
     }
     
     //MARK: saveIteamsN Status Function
     
     func saveIteamsAndState() {
-        let myEncoder = PropertyListEncoder()
         do {
-            let data = try myEncoder.encode(taskListArray)
-            try data.write(to: dataFilePath!)
+            try self.context.save()
         } catch {
-            print("Error While Encoding")
+            print("Error While Saving context \(error)")
         }
         tableView.reloadData()
     }
