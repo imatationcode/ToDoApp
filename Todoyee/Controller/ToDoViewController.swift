@@ -13,24 +13,28 @@ class ToDoViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationController?.navigationBar.barTintColor = .red
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewTask))
-        addButton.tintColor = .black
-        navigationItem.rightBarButtonItem = addButton
+        setUpNewTaskButton()
+        loadTasksData()
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        loadTasks()
+    }
+    
+    func setUpNewTaskButton() {
+        navigationController?.navigationBar.barTintColor = .red
+        let addTaskButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewTask))
+        addTaskButton.tintColor = .black
+        navigationItem.rightBarButtonItem = addTaskButton
     }
     
     //MARK: to Load the Presistant data on device loadTasks
-    func loadTasks() {
+    func loadTasksData() {
         let requestVar: NSFetchRequest<TaskList> = TaskList.fetchRequest()
-        
         do {
             taskListArray = try context.fetch(requestVar)
         } catch {
-            print("Error While Fetching data from core Data\n \(error)")
+            print("Error while Fetching Data From Context \(error)")
         }
     }
+    
     
     @objc func addNewTask() {
         var taskTitleTextField = UITextField()
@@ -69,21 +73,22 @@ class ToDoViewController: UITableViewController {
     //MARK: table view delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let reversedIndex = taskListArray.count - 1 - indexPath.row
-        taskListArray[reversedIndex].isCompletedTask.toggle()
+//        taskListArray[reversedIndex].isCompletedTask.toggle()
+        context.delete(taskListArray[reversedIndex]) 
+        taskListArray.remove(at: reversedIndex)
+        
         tableView.deselectRow(at: indexPath, animated: true)
         saveIteamsAndState()
     }
     
     //MARK: saveIteamsN Status Function
-    
     func saveIteamsAndState() {
         do {
-            try self.context.save()
+            try self.context.save() //commits the changes from local context to the persistence sotrage
         } catch {
             print("Error While Saving context \(error)")
         }
         tableView.reloadData()
     }
-
 }//class End
 
