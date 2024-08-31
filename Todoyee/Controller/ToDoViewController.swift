@@ -9,12 +9,15 @@ import CoreData
 
 class ToDoViewController: UITableViewController {
     var taskListArray = [TaskList]()
+    @IBOutlet weak var taskSearchBar: UISearchBar!
+    
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setUpNewTaskButton()
         loadTasksData()
+        taskSearchBar.delegate = self
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
     }
     
@@ -34,7 +37,6 @@ class ToDoViewController: UITableViewController {
             print("Error while Fetching Data From Context \(error)")
         }
     }
-    
     
     @objc func addNewTask() {
         var taskTitleTextField = UITextField()
@@ -73,9 +75,11 @@ class ToDoViewController: UITableViewController {
     //MARK: table view delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let reversedIndex = taskListArray.count - 1 - indexPath.row
-//        taskListArray[reversedIndex].isCompletedTask.toggle()
-        context.delete(taskListArray[reversedIndex]) 
-        taskListArray.remove(at: reversedIndex)
+        taskListArray[reversedIndex].isCompletedTask.toggle()
+        
+        //deleting record
+//        context.delete(taskListArray[reversedIndex])
+//        taskListArray.remove(at: reversedIndex)
         
         tableView.deselectRow(at: indexPath, animated: true)
         saveIteamsAndState()
@@ -91,4 +95,26 @@ class ToDoViewController: UITableViewController {
         tableView.reloadData()
     }
 }//class End
+
+//MARK: Search Bar Delegate Functions
+extension ToDoViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let requestVar: NSFetchRequest<TaskList> = TaskList.fetchRequest()
+        
+        let predicate = NSPredicate(format: "taskName CONTAINS[cd] %@", searchBar.text!)
+        requestVar.predicate = predicate
+        
+        let sortDescriptor = NSSortDescriptor(key: "taskName", ascending: true)
+        
+        requestVar.sortDescriptors = [sortDescriptor]
+        do {
+            taskListArray = try context.fetch(requestVar)
+        }catch {
+            print("Error while performing Search on database \(error)")
+        }
+        tableView.reloadData()
+    }
+}
+
 
